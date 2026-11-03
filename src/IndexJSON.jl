@@ -18,10 +18,16 @@ function index_json_data(
     (
         id=id(s),
         hash=s.current_hash,
-        html_path=to_url_path(without_pluto_file_extension(s.path) * ".html"),
+        html_path=to_url_path(without_pluto_file_extension(s.path) * "/index.html"),
         statefile_path=settings.Export.baked_state ? nothing :
-                       to_url_path(without_pluto_file_extension(s.path) * ".plutostate"),
-        notebookfile_path=settings.Export.baked_notebookfile ? nothing : to_url_path(s.path),
+                       to_url_path(
+            without_pluto_file_extension(s.path) * "/" *
+            without_pluto_file_extension(basename(s.path)) * ".plutostate",
+        ),
+        notebookfile_path=settings.Export.baked_notebookfile ? nothing :
+                          to_url_path(
+            without_pluto_file_extension(s.path) * "/" * basename(s.path),
+        ),
         current_hash=s.current_hash,
         desired_hash=s.desired_hash,
         frontmatter=merge(

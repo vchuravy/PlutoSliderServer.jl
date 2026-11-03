@@ -183,6 +183,18 @@ should_launch(::NotebookSession) = false
 
 will_process(s) = should_update(s) || should_launch(s) || should_shutdown(s)
 
+# Franklin-style layout: `talks/foo.jl` is exported to `talks/foo/index.html`,
+# next to `talks/foo/foo.jl` and `talks/foo/foo.plutostate`.
+function static_export_paths(url_path, output_dir)
+    export_dir = joinpath(output_dir, to_local_path(without_pluto_file_extension(url_path)))
+    name = basename(url_path)
+    (
+        joinpath(export_dir, name),
+        joinpath(export_dir, "index.html"),
+        joinpath(export_dir, without_pluto_file_extension(name) * ".plutostate"),
+    )
+end
+
 function generate_static_export(
     url_path,
     original_state,
@@ -192,18 +204,8 @@ function generate_static_export(
     start_dir,
 )
     pluto_version = try_get_exact_pluto_version()
-    export_jl_path = let
-        relative_to_notebooks_dir = url_path
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
-    export_html_path = let
-        relative_to_notebooks_dir = without_pluto_file_extension(url_path) * ".html"
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
-    export_statefile_path = let
-        relative_to_notebooks_dir = without_pluto_file_extension(url_path) * ".plutostate"
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
+    export_jl_path, export_html_path, export_statefile_path =
+        static_export_paths(url_path, output_dir)
 
 
     mkpath(dirname(export_jl_path))
@@ -225,8 +227,7 @@ function generate_static_export(
         "undefined"
     end
     slider_server_url_js = if slider_server_running_somewhere
-        abs_path = joinpath(start_dir, to_local_path(url_path))
-        url_of_root = to_url_path(relpath(start_dir, dirname(abs_path))) # e.g. "." or "../../.."
+        url_of_root = to_url_path(relpath(output_dir, dirname(export_html_path))) # e.g. ".." or "../../.."
         repr(something(settings.Export.slider_server_url, url_of_root))
     else
         "undefined"
@@ -280,18 +281,8 @@ end
 tryrm(x) = isfile(x) && rm(x)
 
 function remove_static_export(url_path; settings, output_dir)
-    export_jl_path = let
-        relative_to_notebooks_dir = url_path
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
-    export_html_path = let
-        relative_to_notebooks_dir = without_pluto_file_extension(url_path) * ".html"
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
-    export_statefile_path = let
-        relative_to_notebooks_dir = without_pluto_file_extension(url_path) * ".plutostate"
-        joinpath(output_dir, to_local_path(relative_to_notebooks_dir))
-    end
+    export_jl_path, export_html_path, export_statefile_path =
+        static_export_paths(url_path, output_dir)
 
 
     if !settings.Export.baked_state

@@ -69,7 +69,7 @@ function generate_index_html(
     else
         generate_basic_index_html((
             without_pluto_file_extension(s.path) =>
-                without_pluto_file_extension(s.path) * ".html" for s in sessions
+                without_pluto_file_extension(s.path) * "/index.html" for s in sessions
         ); hash=get_git_hash_cached(start_dir))
     end
 end
@@ -88,5 +88,5 @@ function temp_index_item(s::NotebookSession)
     without_pluto_file_extension(s.path) => nothing
 end
 function temp_index_item(s::NotebookSession{String,String,<:Any})
-    without_pluto_file_extension(s.path) => without_pluto_file_extension(s.path) * ".html"
+    without_pluto_file_extension(s.path) => without_pluto_file_extension(s.path) * "/index.html"
 end
